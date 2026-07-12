@@ -413,13 +413,12 @@ class OTel {
           );
         }
 
-        // Only add ConsoleExporter in debug mode or if explicitly requested
+        // Only add ConsoleExporter in debug mode or if explicitly requested.
+        // OTEL_CONSOLE_EXPORTER is read through the environment service (like
+        // every other var), so it honors both --dart-define and the process
+        // environment rather than compile-time defines alone.
         final exporters = <SpanExporter>[exporter];
-        if (OTelLog.isDebug() ||
-            const bool.fromEnvironment(
-              'OTEL_CONSOLE_EXPORTER',
-              defaultValue: false,
-            )) {
+        if (OTelLog.isDebug() || OTelEnv.isConsoleExporterEnabled()) {
           exporters.add(ConsoleExporter());
         }
 

@@ -37,6 +37,8 @@ String? getFromEnvironment(String key) {
       return const String.fromEnvironment(otelLogSpans);
     case otelLogExport:
       return const String.fromEnvironment(otelLogExport);
+    case otelConsoleExporter:
+      return const String.fromEnvironment(otelConsoleExporter);
 
     // General OTLP Configuration
     case otelExporterOtlpEndpoint:
