@@ -108,6 +108,15 @@ const String otelLogSpans = 'OTEL_LOG_SPANS';
 /// Default: false
 const String otelLogExport = 'OTEL_LOG_EXPORT';
 
+/// Adds a ConsoleExporter alongside the configured span exporter when set to
+/// "true" (Dartastic-specific). The OTel-spec equivalent is
+/// `OTEL_TRACES_EXPORTER=console`, which *replaces* the exporter; this one
+/// *adds* a console exporter so spans print while still shipping over OTLP.
+///
+/// Type: Boolean
+/// Default: false
+const String otelConsoleExporter = 'OTEL_CONSOLE_EXPORTER';
+
 // =============================================================================
 // General OTLP Exporter Configuration
 // =============================================================================
@@ -692,6 +701,7 @@ const Set<String> supportedEnvVars = {
   otelLogMetrics,
   otelLogSpans,
   otelLogExport,
+  otelConsoleExporter,
 
   // General OTLP Exporter Configuration
   otelExporterOtlpEndpoint,

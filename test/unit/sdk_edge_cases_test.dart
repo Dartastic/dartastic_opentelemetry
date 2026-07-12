@@ -125,6 +125,17 @@ void main() {
           isA<String>());
     });
 
+    test('returns values for Dartastic-specific logging env vars', () {
+      // Guards against the OTEL_CONSOLE_EXPORTER regression: it must be
+      // switch-handled here (returns a String, not null) so it is reachable
+      // via --dart-define, not read by an inline literal that bypasses the
+      // environment layer.
+      expect(getFromEnvironment('OTEL_LOG_METRICS'), isA<String>());
+      expect(getFromEnvironment('OTEL_LOG_SPANS'), isA<String>());
+      expect(getFromEnvironment('OTEL_LOG_EXPORT'), isA<String>());
+      expect(getFromEnvironment('OTEL_CONSOLE_EXPORTER'), isA<String>());
+    });
+
     test('returns null for unknown key', () {
       expect(getFromEnvironment('TOTALLY_UNKNOWN_KEY'), isNull);
     });

@@ -371,6 +371,12 @@ class OTelEnv {
   /// should be installed.
   static bool isSdkDisabled() => _getEnvBool(otelSdkDisabled);
 
+  /// Whether a ConsoleExporter should be added alongside the configured span
+  /// exporter, per `OTEL_CONSOLE_EXPORTER`. Read through the environment
+  /// service like every other var, so it honors both `--dart-define` and the
+  /// process environment.
+  static bool isConsoleExporterEnabled() => _getEnvBool(otelConsoleExporter);
+
   /// Get the selected exporter for a signal.
   ///
   /// Returns the exporter type configured via environment variables.
