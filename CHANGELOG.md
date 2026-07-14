@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.1.0-beta.7.dartastic-io.2] - 2026-07-14
+
+### Added
+- **Public `MetricTransformer.transformMetrics` one-shot.** Factors the
+  `MetricData` → `ExportMetricsServiceRequest` assembly out of
+  `OtlpHttpMetricExporter` into a public, exported
+  `MetricTransformer.transformMetrics(data, {fallbackResource})`,
+  mirroring `OtlpLogRecordTransformer.transformLogRecords`. Alternative
+  metric sinks can now reuse the OTLP transform instead of
+  re-implementing per-metric mapping; the HTTP exporter calls the same
+  method (one source of truth). Null-resource fallback stays caller-side
+  so the transformer keeps no dependency on `OTel`. No behavior change to
+  existing exporters.
+
 ## [1.1.0-beta.7.dartastic-io.1] - 2026-07-11
 
 Dartastic registry release mirroring upstream 1.1.0-beta.7. The fork's
