@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.1.0-beta.7.dartastic-io.2] - 2026-07-11
+
+### Added
+- `TraceStateMultiTenant` extension: first-class W3C Trace Context
+  MULTI-TENANT tracestate keys (`{tenant-id}@{system-id}` — the spec's second
+  key form, which OpenTelemetry surfaces no API for). Vendor-neutral:
+  `TraceStateMultiTenant.multiTenantKey()` (fail-fast W3C grammar
+  validation), `putMultiTenant`/`getMultiTenant`, and `tenantsForSystem()`.
+  Pure ergonomics over the API package's existing key validation (accepted
+  since api 1.0.0-beta.7); nothing stamps tenant entries automatically —
+  tracestate propagates to every downstream hop, so tenant identity is an
+  explicit per-call decision. Queued for the canonical API post-donation.
+
 ## [1.1.0-beta.7.dartastic-io.1] - 2026-07-11
 
 Dartastic registry release mirroring upstream 1.1.0-beta.7. The fork's

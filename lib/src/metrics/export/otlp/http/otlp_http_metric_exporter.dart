@@ -9,13 +9,9 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 
 import '../../../../../dartastic_opentelemetry.dart';
-import '../../../../../proto/collector/metrics/v1/metrics_service.pb.dart';
-import '../../../../../proto/common/v1/common.pb.dart' as common_pb;
-import '../../../../../proto/metrics/v1/metrics.pb.dart' as metrics_pb;
 import '../../../../export/otlp_json.dart';
 import '../../../../trace/export/otlp/http/http_client_factory.dart';
 import '../../../../util/zip/gzip.dart';
-import '../metric_transformer.dart';
 
 /// An OpenTelemetry metric exporter that exports metrics using OTLP over HTTP/protobuf
 class OtlpHttpMetricExporter implements MetricExporter {
@@ -254,41 +250,14 @@ class OtlpHttpMetricExporter implements MetricExporter {
       OTelLog.debug('OtlpHttpMetricExporter: Transforming metrics');
     }
 
-    // Create the export request
-    final request = ExportMetricsServiceRequest();
-    final resourceMetrics = metrics_pb.ResourceMetrics();
-
-    // Add resource
-    if (metrics.resource != null) {
-      resourceMetrics.resource = MetricTransformer.transformResource(
-        metrics.resource!,
-      );
-    } else {
-      resourceMetrics.resource = MetricTransformer.transformResource(
-        OTel.resource(null),
-      );
-    }
-
-    // Create scope metrics
-    final scopeMetrics = metrics_pb.ScopeMetrics();
-
-    // Add instrumentation scope - create a new InstrumentationScope
-    // rather than mutating the frozen default returned by scopeMetrics.scope
-    scopeMetrics.scope = common_pb.InstrumentationScope(
-      name: '@dart/dartastic_opentelemetry',
-      version: '1.0.0',
+    // Create the export request. The per-metric mapping lives in
+    // MetricTransformer.transformMetrics (one source of truth, reused by
+    // the native FFI sink); the null-resource fallback stays here so the
+    // transformer needs no dependency on OTel.
+    final request = MetricTransformer.transformMetrics(
+      metrics,
+      fallbackResource: OTel.resource(null),
     );
-
-    // Add metrics to scope
-    for (final metric in metrics.metrics) {
-      scopeMetrics.metrics.add(MetricTransformer.transformMetric(metric));
-    }
-
-    // Add scope metrics to resource metrics
-    resourceMetrics.scopeMetrics.add(scopeMetrics);
-
-    // Add resource metrics to request
-    request.resourceMetrics.add(resourceMetrics);
 
     if (OTelLog.isDebug()) {
       OTelLog.debug('OtlpHttpMetricExporter: Successfully transformed metrics');
