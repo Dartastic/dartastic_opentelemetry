@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.1.0-beta.15.dartastic-io.1] - 2026-09-11
+
+Dartastic registry release mirroring upstream 1.1.0-beta.15, plus one fix.
+
+### Fixed
+
+- **The OTLP log exporters now send `event_name`.** `LogRecord.eventName` was never copied onto the wire, so every
+  event emitted with `emit(eventName: ...)` arrived at the collector as a plain log record with no name, and anything
+  filtering on `event_name` saw nothing. The bundled protobuf definitions were generated from opentelemetry-proto
+  v1.1.0, which predates the field; they are regenerated from v1.11.0, which adds `LogRecord.event_name` and the
+  `EntityRef` and string-table fields on `Resource`, `AnyValue` and `KeyValue`. No generated type was removed.
+
 ## [1.1.0-beta.15] - 2026-08-28
 
 ### Breaking Changes
