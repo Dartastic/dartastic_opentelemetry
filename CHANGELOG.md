@@ -19,6 +19,11 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 -->
 
 
+## [1.1.0-beta.17.dartastic-io.1] - 2026-10-11
+
+Dartastic registry release of upstream 1.1.0-beta.17, unchanged. It replaces 1.1.0-beta.15.dartastic-io.1, whose
+`event_name` fix is upstream since 1.1.0-beta.16.
+
 ## [1.1.0-beta.17] - 2026-10-11
 
 The spec-compliance issues this release closes ([#106](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry/issues/106), 
