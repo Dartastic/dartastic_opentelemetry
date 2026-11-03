@@ -13,6 +13,7 @@ import 'package:dartastic_opentelemetry_api/src/api/trace/span.dart'
 import 'package:meta/meta.dart';
 
 import '../resource/resource.dart';
+import 'span_processor.dart';
 import 'tracer.dart';
 
 part 'span_create.dart';
@@ -51,6 +52,10 @@ class Span implements APISpan {
   /// state, so the SDK span holds it.
   final bool _isRecording;
 
+  /// The end timestamp while the [ExtendedSpanProcessor.onEnding] calls run.
+  /// The span is still mutable then, so [_delegate] has not ended yet.
+  DateTime? _endingTime;
+
   /// Private constructor for creating Span instances.
   ///
   /// @param delegate The API Span implementation to delegate to
@@ -73,6 +78,12 @@ class Span implements APISpan {
 
   @override
   void end({DateTime? endTime, SpanStatusCode? spanStatus}) {
+    if (_endingTime != null) {
+      if (OTelLog.isDebug()) {
+        OTelLog.debug('SDKSpan: Span $name is already ending; end() ignored');
+      }
+      return;
+    }
     if (OTelLog.isDebug()) {
       OTelLog.debug(
         'SDKSpan: Starting to end span ${spanContext.spanId} with name $name',
@@ -83,6 +94,8 @@ class Span implements APISpan {
       setStatus(spanStatus);
     }
 
+    final end = _callOnEnding(endTime);
+
     try {
       if (OTelLog.isDebug()) {
         OTelLog.debug('SDKSpan: Calling delegate.end() for span $name');
@@ -90,7 +103,7 @@ class Span implements APISpan {
       // `spanStatus` is deliberately NOT forwarded: setStatus() above already
       // applied it to the same delegate, and the API's end(spanStatus:) is
       // deprecated because the spec's End operation takes only a timestamp.
-      _delegate.end(endTime: endTime);
+      _delegate.end(endTime: end);
       if (OTelLog.isDebug()) {
         OTelLog.debug('SDKSpan: Delegate.end() completed for span $name');
       }
@@ -141,6 +154,41 @@ class Span implements APISpan {
     }
   }
 
+  /// Calls each [ExtendedSpanProcessor.onEnding], in registration order, and
+  /// returns the end timestamp to end the span with.
+  ///
+  /// Per the Trace SDK spec (OnEnding), the end timestamp is computed first,
+  /// so the time these calls take is not part of the span, and the span is
+  /// still mutable while they run. Only a recording span that has not ended
+  /// gets them. With no such processor, [endTime] is returned as given.
+  DateTime? _callOnEnding(DateTime? endTime) {
+    if (!_isRecording || _delegate.isEnded) return endTime;
+    final processors = _sdkTracer.provider.spanProcessors
+        .whereType<ExtendedSpanProcessor>()
+        .toList();
+    if (processors.isEmpty) return endTime;
+
+    final end = endTime ?? _sdkTracer.timeProvider.nowDateTime();
+    _endingTime = end;
+    try {
+      for (final processor in processors) {
+        try {
+          processor.onEnding(this);
+        } catch (e, stackTrace) {
+          if (OTelLog.isError()) {
+            OTelLog.error(
+              'SDKSpan: Error calling onEnding for processor ${processor.runtimeType}: $e',
+            );
+            OTelLog.error('Stack trace: $stackTrace');
+          }
+        }
+      }
+    } finally {
+      _endingTime = null;
+    }
+    return end;
+  }
+
   // All mutators below are gated on the sampling decision: when a span is
   // not recording, "all this data is discarded right away" and mutation
   // attempts are no-ops (Trace API spec, IsRecording). The delegate only
@@ -188,8 +236,11 @@ class Span implements APISpan {
     _delegate.addSpanLink(spanLink);
   }
 
+  /// The end timestamp, once the span is ending: during the
+  /// [ExtendedSpanProcessor.onEnding] calls it is set while [isEnded] is
+  /// still false.
   @override
-  DateTime? get endTime => _delegate.endTime;
+  DateTime? get endTime => _delegate.endTime ?? _endingTime;
 
   @override
   bool get isEnded => _delegate.isEnded;
