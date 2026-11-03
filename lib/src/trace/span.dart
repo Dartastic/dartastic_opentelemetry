@@ -94,7 +94,12 @@ class Span implements APISpan {
       setStatus(spanStatus);
     }
 
-    final end = _callOnEnding(endTime);
+    // One snapshot of the processors, for OnEnding and onEnd both. A dropped
+    // span reaches no processor, so it takes none.
+    final processors = _isRecording
+        ? _sdkTracer.provider.spanProcessors
+        : const <SpanProcessor>[];
+    final end = _callOnEnding(processors, endTime);
 
     try {
       if (OTelLog.isDebug()) {
@@ -119,13 +124,12 @@ class Span implements APISpan {
         }
         return;
       }
-      final provider = _sdkTracer.provider;
       if (OTelLog.isDebug()) {
         OTelLog.debug(
-          'SDKSpan: Notifying ${provider.spanProcessors.length} span processors',
+          'SDKSpan: Notifying ${processors.length} span processors',
         );
       }
-      for (final processor in provider.spanProcessors) {
+      for (final processor in processors) {
         try {
           if (OTelLog.isDebug()) {
             OTelLog.debug(
@@ -154,24 +158,25 @@ class Span implements APISpan {
     }
   }
 
-  /// Calls each [ExtendedSpanProcessor.onEnding], in registration order, and
-  /// returns the end timestamp to end the span with.
+  /// Calls the [ExtendedSpanProcessor.onEnding] of each of [processors] that
+  /// has one, in registration order, and returns the end timestamp to end
+  /// the span with.
   ///
-  /// Per the Trace SDK spec (OnEnding), the end timestamp is computed first,
-  /// so the time these calls take is not part of the span, and the span is
-  /// still mutable while they run. Only a recording span that has not ended
-  /// gets them. With no such processor, [endTime] is returned as given.
-  DateTime? _callOnEnding(DateTime? endTime) {
-    if (!_isRecording || _delegate.isEnded) return endTime;
-    final processors = _sdkTracer.provider.spanProcessors
-        .whereType<ExtendedSpanProcessor>()
-        .toList();
-    if (processors.isEmpty) return endTime;
-
-    final end = endTime ?? _sdkTracer.timeProvider.nowDateTime();
-    _endingTime = end;
+  /// Per the Trace SDK spec (OnEnding), the end timestamp is computed before
+  /// the first call, so the time the calls take is not part of the span, and
+  /// the span is still mutable while they run. A span that has ended gets no
+  /// calls. With no such processor, [endTime] is returned as given, and
+  /// nothing is allocated.
+  DateTime? _callOnEnding(List<SpanProcessor> processors, DateTime? endTime) {
+    if (_delegate.isEnded) return endTime;
+    var end = endTime;
     try {
       for (final processor in processors) {
+        if (processor is! ExtendedSpanProcessor) continue;
+        if (_endingTime == null) {
+          end ??= _sdkTracer.timeProvider.nowDateTime();
+          _endingTime = end;
+        }
         try {
           processor.onEnding(this);
         } catch (e, stackTrace) {
