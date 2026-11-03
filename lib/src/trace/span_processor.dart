@@ -57,3 +57,28 @@ abstract class SpanProcessor {
   /// been processed but not yet exported are exported immediately.
   Future<void> forceFlush();
 }
+
+/// A [SpanProcessor] that is also called as a span ends, while the span can
+/// still be changed: the Trace SDK spec's `OnEnding`, in Development status.
+///
+/// It is an interface of its own, as Java's `ExtendedSpanProcessor` is, so
+/// that every class implementing [SpanProcessor] stays valid.
+///
+/// More information:
+/// https://opentelemetry.io/docs/specs/otel/trace/sdk/#onending
+abstract class ExtendedSpanProcessor implements SpanProcessor {
+  /// Called during [Span.end], after the end timestamp is computed and
+  /// before any processor's [onEnd].
+  ///
+  /// The span can still be changed here: what this sets is part of the span
+  /// every [onEnd] receives. [Span.endTime] is already the end timestamp,
+  /// and [Span.isEnded] is still false. A call to [Span.end] from here is
+  /// ignored: the span is already ending.
+  ///
+  /// This method is called synchronously, in the order the processors were
+  /// registered, so it must not block. An exception it throws is logged, and
+  /// the span still ends.
+  ///
+  /// @param span The span that is ending
+  void onEnding(Span span);
+}
