@@ -19,6 +19,19 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 -->
 
 
+## [1.1.0-beta.17.dartastic-io.2] - 2026-11-03
+
+### Added
+
+- `ExtendedSpanProcessor`: a span processor whose `onEnding` is called as a span ends, after the end timestamp is
+  computed and while the span can still be changed, in registration order, before any processor's `onEnd`. It is the
+  Trace SDK spec's `SpanProcessor.OnEnding`, in Development status, as an interface of its own, so every class
+  implementing `SpanProcessor` stays valid.
+
+### Fixed
+
+- The OTLP exporters' User-Agent names this version. 1.1.0-beta.17.dartastic-io.1's named 1.1.0-beta.17.
+
 ## [1.1.0-beta.17.dartastic-io.1] - 2026-10-11
 
 Dartastic registry release of upstream 1.1.0-beta.17, unchanged. It replaces 1.1.0-beta.15.dartastic-io.1, whose
