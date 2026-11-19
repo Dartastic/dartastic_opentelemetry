@@ -19,6 +19,11 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 -->
 
 
+## [1.1.0-beta.17.telumi-io.2] - 2026-11-19
+
+Telumi registry release of 1.1.0-beta.17.dartastic-io.2, unchanged: the same code, for apps that resolve from
+registry.telumi.io.
+
 ## [1.1.0-beta.17.dartastic-io.2] - 2026-11-03
 
 ### Added
