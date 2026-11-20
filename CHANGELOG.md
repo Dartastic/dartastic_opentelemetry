@@ -19,6 +19,16 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 -->
 
 
+## [1.1.0-beta.17.telumi-io.3] - 2026-11-20
+
+Telumi registry release of 1.1.0-beta.17.dartastic-io.3.
+
+### Fixed
+
+- `forceFlush` and `shutdown` on `TracerProvider`, `LoggerProvider` and `MeterProvider` no longer throw "Concurrent
+  modification during iteration" when a processor or metric reader is added while they run. Each walks a copy of its
+  list, so one added mid-flush is reached on the next call.
+
 ## [1.1.0-beta.17.telumi-io.2] - 2026-11-19
 
 Telumi registry release of 1.1.0-beta.17.dartastic-io.2, unchanged: the same code, for apps that resolve from

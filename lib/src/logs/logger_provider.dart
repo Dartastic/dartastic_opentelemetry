@@ -70,7 +70,7 @@ class LoggerProvider implements APILoggerProvider {
 
     if (!isShutdown) {
       // Shutdown all log record processors
-      for (final processor in _logRecordProcessors) {
+      for (final processor in List.of(_logRecordProcessors)) {
         if (OTelLog.isDebug()) {
           OTelLog.debug(
               'LoggerProvider: Shutting down processor ${processor.runtimeType}');
@@ -243,7 +243,7 @@ class LoggerProvider implements APILoggerProvider {
       return;
     }
 
-    for (var processor in _logRecordProcessors) {
+    for (var processor in List.of(_logRecordProcessors)) {
       try {
         if (OTelLog.isDebug()) {
           OTelLog.debug(
